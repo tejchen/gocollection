@@ -1,8 +1,15 @@
 # gocollection
-用Go语言封装的常见结（lun）构（zi）
+用Go语言封装的常用结（lun）构（zi）
 
 ## 目前支持的集合
+
+1. List
+2. Array
+3. [doing] Set
+4. [doing] MutliMap
+
 ### List
+
 实现类：**增强版 LinkedList**
 
 接口定义：[List 接口](https://github.com/tejchen/gocollection/blob/master/golists/interface.go)
@@ -43,6 +50,41 @@ func main(){
     list.Get(3) // return "i am 3"
     list.Remove(3) // remove "i am 3"
     list.Foreach(func(item interface{}) {
+        i := item.(string)
+        fmt.Println(i)
+    })
+}
+```
+
+### Array
+
+实现类：**SimpleArray**
+
+接口定义：[Array 接口](https://github.com/tejchen/gocollection/blob/master/goarrays/interface.go)
+
+集合介绍:
+
+实现了对数组操作的简单封装，更加语义化
+
+使用入门：
+
+```go
+package main
+import "fmt"
+import "github.com/tejchen/gocollection/goarrays"
+
+func main(){
+    array := goarrays.NewSimpleArray()
+    array.Append("i am 1")
+    array.Append("i am 2")
+    array.Append("i am 3")
+    
+    newArray := goarrays.NewSimpleArray()
+    newArray.AppendAll(array)
+
+    newArray.Get(0) // return "i am 1"
+    newArray.Remove(2) // remove "i am 3"
+    newArray.Foreach(func(item interface{}) {
         i := item.(string)
         fmt.Println(i)
     })
