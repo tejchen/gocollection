@@ -2,12 +2,16 @@ package linkedlist
 
 import "fmt"
 
-var IndexRange = 100
+type SimpleSkipIndex struct {
+	Idx        []*Element
+	IndexRange int
+}
 
-type SimpleSkipIndex []*Element
-
-func GetDefaultSkipIndex(headNode *Element) *SimpleSkipIndex {
-	return &SimpleSkipIndex{headNode}
+func GetDefaultSkipIndex(headNode *Element, IndexRange int) *SimpleSkipIndex {
+	return &SimpleSkipIndex{
+		Idx:        []*Element{headNode},
+		IndexRange: IndexRange,
+	}
 }
 
 // 随机插入节点，该方法会自动调整索引
@@ -18,14 +22,14 @@ func (si *SimpleSkipIndex) RandomInsert(insertIdx int, element *Element, newSize
 	// 计算索引位置
 	skipIndexIdx := si.calculateNodeIndex(insertIdx)
 	// 插入在索引位置
-	if insertIdx%IndexRange == 0 {
+	if insertIdx%si.IndexRange == 0 {
 		// 新索引节点
 		if skipIndexIdx == si.Len() {
-			*si = append(*si, element)
+			si.Idx = append(si.Idx, element)
 			return
 		}
 		// 替换索引节点
-		(*si)[skipIndexIdx] = element
+		si.Idx[skipIndexIdx] = element
 	}
 	// 索引左移
 	si.calculateOffset(skipIndexIdx, true)
@@ -38,18 +42,18 @@ func (si *SimpleSkipIndex) RandomRemove(removeIdx int, next *Element) {
 	// 计算索引位置
 	skipIndexIdx := si.calculateNodeIndex(removeIdx)
 	// 删除的是索引节点
-	if removeIdx%IndexRange == 0 {
+	if removeIdx%si.IndexRange == 0 {
 		// 尾部
 		if skipIndexIdx == si.Len()-1 {
 			if next != nil {
-				(*si)[skipIndexIdx] = next
+				si.Idx[skipIndexIdx] = next
 				return
 			}
-			*si = append((*si)[:si.Len()-1])
+			si.Idx = append(si.Idx[:si.Len()-1])
 			return
 		}
 		// 替换索引节点
-		(*si)[skipIndexIdx] = next
+		si.Idx[skipIndexIdx] = next
 	}
 	// 索引右移
 	si.calculateOffset(skipIndexIdx, false)
@@ -57,33 +61,33 @@ func (si *SimpleSkipIndex) RandomRemove(removeIdx int, next *Element) {
 
 // 匹配索引
 func (si *SimpleSkipIndex) MatchIndex(index int) (*Element, int) {
-	nodeIndex := index / IndexRange
-	leftoverRange := index % IndexRange
+	nodeIndex := index / si.IndexRange
+	leftoverRange := index % si.IndexRange
 	if nodeIndex >= si.Len() {
 		panic(fmt.Sprintf("MatchIndex:index out of index! size:%v, index length: %v", index, si.Len()))
 	}
-	return (*si)[nodeIndex], leftoverRange
+	return si.Idx[nodeIndex], leftoverRange
 }
 
 // 索引长度
 func (si *SimpleSkipIndex) Len() int {
-	return len(*si)
+	return len(si.Idx)
 }
 
 // 计算索引位置
 func (si *SimpleSkipIndex) calculateNodeIndex(index int) int {
-	nodeIndex := index / IndexRange
+	nodeIndex := index / si.IndexRange
 	return nodeIndex
 }
 
 // 计算索引位置
 func (si *SimpleSkipIndex) appendIndex(newSize int) {
-	if newSize == IndexRange*si.Len()+1 {
-		e := (*si)[si.Len()-1]
-		for i := 0; i < IndexRange; i++ {
+	if newSize == si.IndexRange*si.Len()+1 {
+		e := (si.Idx)[si.Len()-1]
+		for i := 0; i < si.IndexRange; i++ {
 			e = e.GetNext()
 		}
-		*si = append(*si, e)
+		si.Idx = append(si.Idx, e)
 	}
 }
 
@@ -97,18 +101,18 @@ func (si *SimpleSkipIndex) calculateOffset(indexIdx int, incr bool) {
 	// 左偏移
 	if incr {
 		for i := indexIdx + 1; i < si.Len(); i++ {
-			(*si)[i] = (*si)[i].GetPrev()
+			si.Idx[i] = si.Idx[i].GetPrev()
 		}
 	}
 	// 右偏移
 	if !incr {
 		for i := indexIdx + 1; i < si.Len(); i++ {
 			// 删除该索引节点
-			if (*si)[i].GetNext() == nil {
-				*si = append((*si)[:si.Len()-1])
+			if si.Idx[i].GetNext() == nil {
+				si.Idx = append(si.Idx[:si.Len()-1])
 				continue
 			}
-			(*si)[i] = (*si)[i].GetNext()
+			si.Idx[i] = si.Idx[i].GetNext()
 		}
 	}
 }

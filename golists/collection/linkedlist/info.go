@@ -19,7 +19,7 @@ func (i *Info) Init(element *Element) bool {
 	i.Head = element
 	i.Tail = element
 	i.Size += 1
-	i.SkipIndex = GetDefaultSkipIndex(element)
+	i.SkipIndex = GetDefaultSkipIndex(element, 32)
 	return true
 }
 
@@ -61,8 +61,7 @@ func (i *Info) ReCalculateIndexByRandomRemove(removeIndex int, next *Element) {
 
 // 匹配跳表索引
 func (i *Info) MatchIndex(index int) (*Element, int) {
-	node, leftoverRange := i.SkipIndex.MatchIndex(index)
-	return node, leftoverRange
+	return i.SkipIndex.MatchIndex(index)
 }
 
 // 清空信息

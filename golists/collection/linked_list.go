@@ -1,8 +1,8 @@
-package golists
+package collection
 
 import (
 	"fmt"
-	"github.com/tejchen/gocollection/golists/linkedlist"
+	"github.com/tejchen/gocollection/golists/collection/linkedlist"
 )
 
 /**
@@ -11,14 +11,14 @@ import (
 -----------------------------------
 */
 
-type LinkedListImpl struct {
+type LinkedList struct {
 	// 双向链表
 	Head *linkedlist.Element
 	// list 信息（头，尾，索引，总数）
 	Info linkedlist.Info
 }
 
-func (l *LinkedListImpl) Add(item interface{}) {
+func (l *LinkedList) Add(item interface{}) {
 	element := linkedlist.DefaultElement(item)
 	if l.IsEmpty() {
 		l.Head = element
@@ -31,7 +31,7 @@ func (l *LinkedListImpl) Add(item interface{}) {
 	l.Info.ReCalculateIndexByRandomInsert(l.Info.Size-1, element)
 }
 
-func (l *LinkedListImpl) AddByIndex(idx int, item interface{}) {
+func (l *LinkedList) AddByIndex(idx int, item interface{}) {
 	if idx < 0 || idx > l.Info.Size {
 		panic(fmt.Sprintf("AppendByIndex:index out! size: %v, index: %v", l.Info.Size, idx))
 	}
@@ -54,7 +54,7 @@ func (l *LinkedListImpl) AddByIndex(idx int, item interface{}) {
 	l.Info.ReCalculateIndexByRandomInsert(idx, element)
 }
 
-func (l *LinkedListImpl) Get(idx int) interface{} {
+func (l *LinkedList) Get(idx int) interface{} {
 	node := l.get(idx)
 	if node != nil {
 		return node.Value()
@@ -62,7 +62,7 @@ func (l *LinkedListImpl) Get(idx int) interface{} {
 	return nil
 }
 
-func (l *LinkedListImpl) Remove(idx int) bool {
+func (l *LinkedList) Remove(idx int) bool {
 	if idx < 0 || idx >= l.Info.Size {
 		return false
 	}
@@ -100,19 +100,19 @@ func (l *LinkedListImpl) Remove(idx int) bool {
 	return true
 }
 
-func (l *LinkedListImpl) Size() int {
+func (l *LinkedList) Size() int {
 	return l.Info.Size
 }
 
-func (l *LinkedListImpl) IsEmpty() bool {
+func (l *LinkedList) IsEmpty() bool {
 	return l.Head == nil
 }
 
-func (l *LinkedListImpl) NotEmpty() bool {
+func (l *LinkedList) IsNotEmpty() bool {
 	return !l.IsEmpty()
 }
 
-func (l *LinkedListImpl) Foreach(iterator func(item interface{})) {
+func (l *LinkedList) Foreach(iterator func(item interface{})) {
 	temp := l.Head
 	for {
 		if temp == nil {
@@ -131,18 +131,18 @@ func (l *LinkedListImpl) Foreach(iterator func(item interface{})) {
 -          以下是内部方法           -
 -----------------------------------
 */
-func (l *LinkedListImpl) updateHead(element *linkedlist.Element) {
+func (l *LinkedList) updateHead(element *linkedlist.Element) {
 	l.Head = element
 	l.Info.UpdateHead(element)
 }
 
-func (l *LinkedListImpl) clear() {
+func (l *LinkedList) clear() {
 	l.Head = nil
 	l.Info.Clear()
 	return
 }
 
-func (l *LinkedListImpl) get(idx int) *linkedlist.Element {
+func (l *LinkedList) get(idx int) *linkedlist.Element {
 	if idx < 0 || idx >= l.Info.Size {
 		panic(fmt.Sprintf("Get:index out! size:%v, index:%v", l.Info.Size, idx))
 	}

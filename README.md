@@ -1,38 +1,30 @@
 # gocollection
-用Go语言封装的常用结（lun）构（zi）
+基于Go语言实现常用结构,封装原生数组常见功能
 
 ## 目前支持的集合
 
 1. List
-2. Array
-3. [doing] Set
-4. [doing] MutliMap
+    1. ListedList
+    2. ArrayList
+2. [todo] Set
+3. [todo] SortedSet
+4. [todo] Map 
+5. [todo] SortedMap 
+6. [todo] MultiMap
+
 
 ### List
 
-实现类：**增强版 LinkedList**
+#### LinkedList(增强)
 
-接口定义：[List 接口](https://github.com/tejchen/gocollection/blob/master/golists/interface.go)
+接口定义：[List 接口](https://github.com/tejchen/gocollection/blob/master/golists/collection/interface.go)
 
 集合介绍:
-
-如果是 Java 背景的小伙伴，应该对 LinkedList 和 ArrayList 两个集合很熟悉了。
-
-Go’s LinkedList 吸收了这两个结构的优缺点，也做了一些改良，下面稍微介绍以及对比一下：
-
-**Java‘s LinkedList：**
-1. 底层是双向链表
-2. 插入/删除性能优秀，但是随机读性能较差
-
-**Java‘s ArrayList：**
-1. 底层是数组，外层加了索引
-2. 随机读性能优秀，随机插入/删除性能较差
-
-**gocollection’s LinkedList**
-1. 支持 Java’s List 大部分 API
-2. 增加 Go 特色 API
-3. 底层是双向链表，拥有良好的插入删除性能
-4. 增加了简单的跳表索引，固定每100个元素增加一个索引节点，增加随机读性能
+1. 基于双向链表实现，拥有有优秀的增删性能
+    1. 在长度为1w的情况下，随机插入100条数据，性能约为go原生数组的20倍
+2. 实现了简单跳表索引，保持随机读速度，时间复杂度为O(x/100+x%100)
+    1. 在长度为1w的情况下，随机读取1000次，性能约为go原生数组的1/5
+    2. 在长度为1000w的情况下，随机读取100w次，性能约为go原生数组的1/5
 
 使用入门：
 
@@ -56,35 +48,32 @@ func main(){
 }
 ```
 
-### Array
+#### ArrayList
 
-实现类：**SimpleArray**
-
-接口定义：[Array 接口](https://github.com/tejchen/gocollection/blob/master/goarrays/interface.go)
+接口定义：[List 接口](https://github.com/tejchen/gocollection/blob/master/golists/collection/interface.go)
 
 集合介绍:
 
-实现了对数组操作的简单封装，更加语义化
+1. 基于数组实现，天生支持索引，拥有优秀的查询性能
+    1. 数组为连续内存，可直接根据index计算偏移量定位到内存，复杂度为O(1)  
+2. 占用空间小
 
 使用入门：
 
 ```go
 package main
 import "fmt"
-import "github.com/tejchen/gocollection/goarrays"
+import "github.com/tejchen/gocollection/golists"
 
 func main(){
-    array := goarrays.NewSimpleArray()
-    array.Append("i am 1")
-    array.Append("i am 2")
-    array.Append("i am 3")
-    
-    newArray := goarrays.NewSimpleArray()
-    newArray.AppendAll(array)
-
-    newArray.Get(0) // return "i am 1"
-    newArray.Remove(2) // remove "i am 3"
-    newArray.Foreach(func(item interface{}) {
+    list := golists.NewArrayList()
+    list.Add("i am 1")
+    list.Add("i am 2")
+    list.Add("i am 3")
+    list.AddByIndex(0, "i am 0")
+    list.Get(3) // return "i am 3"
+    list.Remove(3) // remove "i am 3"
+    list.Foreach(func(item interface{}) {
         i := item.(string)
         fmt.Println(i)
     })

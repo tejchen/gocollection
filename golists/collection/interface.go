@@ -1,4 +1,4 @@
-package golists
+package collection
 
 type List interface {
 	// 追加
@@ -14,7 +14,7 @@ type List interface {
 	// 判空
 	IsEmpty() bool
 	// 判非空
-	NotEmpty() bool
+	IsNotEmpty() bool
 	// 迭代方法
 	Foreach(iterator func(item interface{}))
 }

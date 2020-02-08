@@ -2,17 +2,16 @@ package test
 
 import (
 	"github.com/tejchen/gocollection/golists"
-	"github.com/tejchen/gocollection/golists/linkedlist"
-	"math/rand"
+	"github.com/tejchen/gocollection/golists/collection"
+	"github.com/tejchen/gocollection/golists/collection/linkedlist"
+	"github.com/tejchen/gocollection/test/base"
 	"sort"
 	"testing"
 	"time"
 )
 
-var testRange = 10000
-
 //基础服务测试
-func TestBaseService(t *testing.T) {
+func TestLinkedListBaseService(t *testing.T) {
 	var result = true
 
 	for i := 0; i < 100; i++ {
@@ -20,30 +19,30 @@ func TestBaseService(t *testing.T) {
 		list := golists.NewLinkedList()
 		result = result && list.Size() == 0
 		result = result && list.IsEmpty() == true
-		result = result && list.NotEmpty() == false
+		result = result && list.IsNotEmpty() == false
 
 		// 准备数据
-		for i := 0; i < testRange; i++ {
+		for i := 0; i < base.DefaultRange; i++ {
 			list.Add(i)
 		}
 
-		result = result && testBase(list.(*golists.LinkedListImpl), true)
+		result = result && linkedListTestBase(list.(*collection.LinkedList), true)
 
 		// 顺序读测试
-		for i := 0; i < testRange; i++ {
+		for i := 0; i < base.DefaultRange; i++ {
 			result = result && list.Get(i) == i
 		}
 
 		// 随机读测试 1/5
-		randomTestSample := getRandomTestSample(testRange / 5)
+		randomTestSample := base.GetRandomTestSample(base.DefaultRange / 5)
 		for i := 0; i < len(randomTestSample); i++ {
 			result = result && randomTestSample[i] == list.Get(randomTestSample[i])
 		}
 
 		// 保证底层有序
-		var temp = list.(*golists.LinkedListImpl)
+		var temp = list.(*collection.LinkedList)
 		node := temp.Head
-		for i := 0; i < testRange; i++ {
+		for i := 0; i < base.DefaultRange; i++ {
 			result = result && node.Value() == i
 			node = node.GetNext()
 		}
@@ -51,22 +50,23 @@ func TestBaseService(t *testing.T) {
 
 		// 保证索引有序
 		for i := 0; i < temp.Info.SkipIndex.Len(); i++ {
-			skipIndex := (*temp.Info.SkipIndex)[i]
-			result = result && (skipIndex.Value().(int)%linkedlist.IndexRange == 0)
+			skipIndex := temp.Info.SkipIndex.Idx[i]
+			indexRange := temp.Info.SkipIndex.IndexRange
+			result = result && (skipIndex.Value().(int)%indexRange == 0)
 		}
 
-		result = result && testBase(list.(*golists.LinkedListImpl), true)
+		result = result && linkedListTestBase(list.(*collection.LinkedList), true)
 
-		result = result && list.Size() == testRange
+		result = result && list.Size() == base.DefaultRange
 		result = result && list.IsEmpty() == false
-		result = result && list.NotEmpty() == true
+		result = result && list.IsNotEmpty() == true
 	}
 
-	t.Logf("TestBaseService: %v", result)
+	t.Logf("linkedListTestBaseService: %v", result)
 }
 
 // 随机插入测试
-func TestRandomInsert(t *testing.T) {
+func TestLinkedListRandomInsert(t *testing.T) {
 	var randomInsertCheck = true
 
 	var timeSum int64 = 0
@@ -76,11 +76,11 @@ func TestRandomInsert(t *testing.T) {
 		randomInsertList := golists.NewLinkedList()
 
 		// 随机样本数据
-		randomTestSample := getRandomTestSample(testRange / 5)
+		randomTestSample := base.GetRandomTestSample(base.DefaultRange / 5)
 		sort.Ints(randomTestSample)
 
 		// 初始化数据
-		initRandomInsertContainer(randomInsertList, randomTestSample)
+		linkedListInitRandomInsertContainer(randomInsertList, randomTestSample)
 
 		start := time.Now().UnixNano()
 		// 随机插入
@@ -90,38 +90,39 @@ func TestRandomInsert(t *testing.T) {
 		timeSum += time.Now().UnixNano() - start
 
 		// 顺序读测试
-		for i := 0; i < testRange; i++ {
+		for i := 0; i < base.DefaultRange; i++ {
 			randomInsertCheck = randomInsertCheck && randomInsertList.Get(i) == i
 		}
 
 		// 随机读测试 1/5
-		newRandomTestSample := getRandomTestSample(testRange / 5)
+		newRandomTestSample := base.GetRandomTestSample(base.DefaultRange / 5)
 		for i := 0; i < len(newRandomTestSample); i++ {
 			randomInsertCheck = randomInsertCheck && newRandomTestSample[i] == randomInsertList.Get(newRandomTestSample[i])
 		}
 
 		// 保证底层有序
-		var temp = randomInsertList.(*golists.LinkedListImpl)
+		var temp = randomInsertList.(*collection.LinkedList)
 		node := temp.Head
-		for i := 0; i < testRange; i++ {
+		for i := 0; i < base.DefaultRange; i++ {
 			randomInsertCheck = randomInsertCheck && node.Value() == i
 			node = node.GetNext()
 		}
 
 		// 保证索引有序
 		for i := 0; i < temp.Info.SkipIndex.Len(); i++ {
-			skipIndex := (*temp.Info.SkipIndex)[i]
-			randomInsertCheck = randomInsertCheck && (skipIndex.Value().(int)%linkedlist.IndexRange == 0)
+			skipIndex := temp.Info.SkipIndex.Idx[i]
+			skipIndexRange := temp.Info.SkipIndex.IndexRange
+			randomInsertCheck = randomInsertCheck && (skipIndex.Value().(int)%skipIndexRange == 0)
 		}
 
-		randomInsertCheck = randomInsertCheck && testBase(randomInsertList.(*golists.LinkedListImpl), true)
+		randomInsertCheck = randomInsertCheck && linkedListTestBase(randomInsertList.(*collection.LinkedList), true)
 	}
 	t.Logf("TestRandomInsert time: %v", timeSum/100)
 	t.Logf("TestRandomInsert: %v", randomInsertCheck)
 }
 
 // 随机删除测试
-func TestRandomRemove(t *testing.T) {
+func TestLinkedListRandomRemove(t *testing.T) {
 	var randomRemoveCheck = true
 	var timeSum int64 = 0
 
@@ -130,10 +131,10 @@ func TestRandomRemove(t *testing.T) {
 		randomRemoveList := golists.NewLinkedList()
 
 		// 随机样本数据 1/5
-		randomTestSample := getRandomTestSample(testRange / 5)
+		randomTestSample := base.GetRandomTestSample(base.DefaultRange / 5)
 
 		// 初始化数据
-		for i := 0; i < testRange; i++ {
+		for i := 0; i < base.DefaultRange; i++ {
 			randomRemoveList.Add(i)
 		}
 
@@ -150,10 +151,10 @@ func TestRandomRemove(t *testing.T) {
 		timeSum += time.Now().UnixNano() - start
 
 		// 长度测试
-		randomRemoveCheck = randomRemoveCheck && randomRemoveList.Size() == testRange-deleteCount
+		randomRemoveCheck = randomRemoveCheck && randomRemoveList.Size() == base.DefaultRange-deleteCount
 
 		// 保证底层有序
-		var temp = randomRemoveList.(*golists.LinkedListImpl)
+		var temp = randomRemoveList.(*collection.LinkedList)
 		var node = temp.Head
 		for i := 0; i < randomRemoveList.Size(); i++ {
 			if i == 0 {
@@ -165,14 +166,13 @@ func TestRandomRemove(t *testing.T) {
 		// 保证索引节点对应
 		node = temp.Head
 		for i := 0; i < temp.Info.SkipIndex.Len(); i++ {
-			if i%linkedlist.IndexRange == 0 {
-				skipIndex := (*temp.Info.SkipIndex)[i/linkedlist.IndexRange]
+			if i%temp.Info.SkipIndex.IndexRange == 0 {
+				skipIndex := temp.Info.SkipIndex.Idx[i/temp.Info.SkipIndex.IndexRange]
 				randomRemoveCheck = randomRemoveCheck && skipIndex.Value() == node.Value()
 			}
 			node = node.GetNext()
 		}
-
-		randomRemoveCheck = randomRemoveCheck && testBase(randomRemoveList.(*golists.LinkedListImpl), true)
+		randomRemoveCheck = randomRemoveCheck && linkedListTestBase(randomRemoveList.(*collection.LinkedList), true)
 	}
 
 	t.Logf("TestRandomRemove time: %v", timeSum/100)
@@ -180,7 +180,7 @@ func TestRandomRemove(t *testing.T) {
 }
 
 // 定点边界测试
-func TestBoundary(t *testing.T) {
+func TestLinkedListBoundary(t *testing.T) {
 	result := true
 	// 头插
 	headInsert := golists.NewLinkedList()
@@ -205,7 +205,7 @@ func TestBoundary(t *testing.T) {
 	result = result && tailInsert.Get(300) == 301
 	result = result && tailInsert.Get(298) == 298
 	result = result && tailInsert.Size() == 302
-	result = result && testBase(tailInsert.(*golists.LinkedListImpl), false)
+	result = result && linkedListTestBase(tailInsert.(*collection.LinkedList), false)
 
 	// 索引节点插入
 	nodeInsert := golists.NewLinkedList()
@@ -222,7 +222,7 @@ func TestBoundary(t *testing.T) {
 	result = result && nodeInsert.Size() == 302
 	nodeInsert.Remove(0)
 	nodeInsert.Remove(100)
-	result = result && testBase(nodeInsert.(*golists.LinkedListImpl), false)
+	result = result && linkedListTestBase(nodeInsert.(*collection.LinkedList), false)
 
 	// 头删
 	headRemove := golists.NewLinkedList()
@@ -233,7 +233,7 @@ func TestBoundary(t *testing.T) {
 	headRemove.Remove(1)
 	result = result && headRemove.Size() == 298
 	result = result && headRemove.Get(0) == 1
-	result = result && testBase(headRemove.(*golists.LinkedListImpl), true)
+	result = result && linkedListTestBase(headRemove.(*collection.LinkedList), true)
 
 	// 尾删
 	tailRemove := golists.NewLinkedList()
@@ -245,7 +245,7 @@ func TestBoundary(t *testing.T) {
 	tailRemove.Remove(300)
 	result = result && tailRemove.Size() == 298
 	result = result && tailRemove.Get(297) == 297
-	result = result && testBase(tailRemove.(*golists.LinkedListImpl), true)
+	result = result && linkedListTestBase(tailRemove.(*collection.LinkedList), true)
 
 	// 索引节点删除
 	nodeRemove := golists.NewLinkedList()
@@ -257,17 +257,17 @@ func TestBoundary(t *testing.T) {
 	nodeRemove.Remove(200)
 	result = result && nodeRemove.Size() == 298
 	result = result && nodeRemove.Get(201) == 203
-	result = result && testBase(nodeRemove.(*golists.LinkedListImpl), true)
+	result = result && linkedListTestBase(nodeRemove.(*collection.LinkedList), true)
 
 	t.Logf("TestBoundary: %v", result)
 }
 
 // 迭代测试
-func TestForEach(t *testing.T) {
+func TestLinkedListForEach(t *testing.T) {
 	list := golists.NewLinkedList()
 	//init
-	testRange := 4000
-	for i := 1; i <= testRange; i++ {
+	DefaultRange := 4000
+	for i := 1; i <= DefaultRange; i++ {
 		list.Add(i)
 	}
 	result := make([]int, 0)
@@ -275,31 +275,11 @@ func TestForEach(t *testing.T) {
 		item := t.(int)
 		result = append(result, item)
 	})
-	t.Logf("foreach result: %v", len(result) == testRange)
+	t.Logf("foreach result: %v", len(result) == DefaultRange)
 }
 
-func getRandomTestSample(randomInsertSampleCap int) []int {
-	insertIdxArray := make([]int, 0)
-	for i := 0; i < randomInsertSampleCap; i++ {
-		rand.Seed(time.Now().UnixNano())
-		randomInt := rand.Intn(testRange)
-		diff := false
-		for idx := range insertIdxArray {
-			if insertIdxArray[idx] == randomInt {
-				diff = true
-			}
-		}
-		if diff {
-			i--
-			continue
-		}
-		insertIdxArray = append(insertIdxArray, randomInt)
-	}
-	return insertIdxArray
-}
-
-func initRandomInsertContainer(randomInsertList golists.List, ignoreSample []int) {
-	for i := 0; i < testRange; i++ {
+func linkedListInitRandomInsertContainer(randomInsertList collection.List, ignoreSample []int) {
+	for i := 0; i < base.DefaultRange; i++ {
 		hitRandomIdx := false
 		for j := 0; j < len(ignoreSample); j++ {
 			if ignoreSample[j] == i {
@@ -314,21 +294,21 @@ func initRandomInsertContainer(randomInsertList golists.List, ignoreSample []int
 	}
 }
 
-// 测试 LinkedListImpl 是否正常
+// 测试 LinkedList 是否正常
 // 1. 节点前后相连正常
 // 2. 索引位置正常
 // 3. isSorted 为 true 时，校验节点递增
-func testBase(linkedList *golists.LinkedListImpl, isSorted bool) bool {
-	if linkedList == nil || linkedList.IsEmpty() {
+func linkedListTestBase(list *collection.LinkedList, isSorted bool) bool {
+	if list == nil || list.IsEmpty() {
 		return false
 	}
 	result := true
-	result = result && testNode(linkedList.Head, isSorted)
+	result = result && linkedListTestNode(list.Head, isSorted)
 	// 保证索引节点对应
-	node := linkedList.Head
-	for i := 0; i < linkedList.Info.SkipIndex.Len(); i++ {
-		if i%linkedlist.IndexRange == 0 {
-			skipIndex := (*linkedList.Info.SkipIndex)[i/linkedlist.IndexRange]
+	var node = list.Head
+	for i := 0; i < list.Info.SkipIndex.Len(); i++ {
+		if i%list.Info.SkipIndex.IndexRange == 0 {
+			skipIndex := list.Info.SkipIndex.Idx[i/list.Info.SkipIndex.IndexRange]
 			result = result && skipIndex.Value() == node.Value()
 		}
 		node = node.GetNext()
@@ -336,7 +316,7 @@ func testBase(linkedList *golists.LinkedListImpl, isSorted bool) bool {
 	return result
 }
 
-func testNode(element *linkedlist.Element, isSorted bool) bool {
+func linkedListTestNode(element *linkedlist.Element, isSorted bool) bool {
 	result := true
 	if element == nil {
 		return result
@@ -350,5 +330,5 @@ func testNode(element *linkedlist.Element, isSorted bool) bool {
 		// element.next > element
 		result = result && element.GetNext().Value().(int) > element.Value().(int)
 	}
-	return result && testNode(element.GetNext(), isSorted)
+	return result && linkedListTestNode(element.GetNext(), isSorted)
 }
